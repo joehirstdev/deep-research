@@ -204,31 +204,47 @@ async def research_stream(request: ResearchRequest):
             all_links = []
 
             for idx, sub_q in enumerate(plan.sub_questions, 1):
+                # Step 1: Show question
                 yield send_event(
-                    "progress",
+                    "question",
                     {
-                        "message": f"Researching {idx}/{len(plan.sub_questions)}: {sub_q}",
-                        "current": idx,
+                        "index": idx,
+                        "question": sub_q,
                         "total": len(plan.sub_questions),
                     },
                 )
-                await asyncio.sleep(0)  # Force flush
+                await asyncio.sleep(0)
 
                 try:
-                    result, context, links = await asyncio.to_thread(
+                    # Step 2: Get and show sources
+                    links = await asyncio.to_thread(searcher.get_sources, sub_q)
+                    yield send_event(
+                        "sources",
+                        {
+                            "index": idx,
+                            "sources": links,
+                        },
+                    )
+                    await asyncio.sleep(0)
+
+                    # Step 3: Do full research (synthesis) and show answer
+                    result, context, _ = await asyncio.to_thread(
                         searcher.research, sub_q
                     )
-                    sub_result = {
-                        "index": idx,
-                        "question": sub_q,
-                        "answer": result,
-                        "sources": links,
-                    }
-                    sub_results.append(sub_result)
+                    yield send_event(
+                        "answer",
+                        {
+                            "index": idx,
+                            "answer": result,
+                        },
+                    )
+                    await asyncio.sleep(0)
+
+                    sub_results.append(
+                        {"question": sub_q, "answer": result, "sources": links}
+                    )
                     all_links.extend(links)
 
-                    yield send_event("sub_result", sub_result)
-                    await asyncio.sleep(0)  # Force flush
                 except Exception as e:
                     # Log error but continue with other questions
                     error_result = {
@@ -238,14 +254,30 @@ async def research_stream(request: ResearchRequest):
                         "sources": [],
                     }
                     sub_results.append(error_result)
-                    yield send_event("sub_result", error_result)
+                    yield send_event(
+                        "answer",
+                        {
+                            "index": idx,
+                            "answer": f"Error: {e}",
+                        },
+                    )
                     await asyncio.sleep(0)
 
-            # Step 3: Synthesize
+            # Step 3: Show all accumulated sources before synthesis
             if not sub_results:
                 yield send_event("error", {"message": "No results to synthesize"})
                 return
 
+            yield send_event(
+                "all_sources",
+                {
+                    "sources": list(set(all_links)),
+                    "total": len(set(all_links)),
+                },
+            )
+            await asyncio.sleep(0)
+
+            # Step 4: Synthesize
             yield send_event("progress", {"message": "Synthesizing final answer..."})
             await asyncio.sleep(0)  # Force flush
 
@@ -285,10 +317,7 @@ async def research_stream(request: ResearchRequest):
             # Complete
             yield send_event(
                 "complete",
-                {
-                    "all_sources": list(set(all_links)),
-                    "total_sub_questions": len(plan.sub_questions),
-                },
+                {"total_sub_questions": len(plan.sub_questions)},
             )
 
         except Exception as e:

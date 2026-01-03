@@ -45,6 +45,11 @@ class SearcherAgent:
         except Exception as e:
             raise RuntimeError(f"Research failed for query '{query}': {e}")
 
+    def get_sources(self, query: str) -> list[str]:
+        """Get sources for a query without synthesis (faster)."""
+        search_results = web_search(query, self.search_api_key, max_results=3)
+        return [result.url for result in search_results]
+
     def _format_context(self, results: list[SearchResult]) -> str:
         """Format search results into context string."""
         return "\n".join(

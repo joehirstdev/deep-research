@@ -92,17 +92,49 @@
                     </div>`;
                     break;
 
-                case 'sub_result':
-                    const sources = event.sources.map((url, i) =>
+                case 'question':
+                    html = `<div class="event sub_result" id="question-${event.index}">
+                        <div class="timestamp">${timestamp}</div>
+                        <strong>Question ${event.index}/${event.total}: ${event.question}</strong>
+                    </div>`;
+                    break;
+
+                case 'sources':
+                    const sourcesList = event.sources.map((url, i) =>
                         `<a href="${url}" target="_blank">[${i+1}] ${url}</a>`
                     ).join('');
-                    html = `<div class="event sub_result">
+                    const questionBox = document.getElementById(`question-${event.index}`);
+                    if (questionBox) {
+                        questionBox.innerHTML += `
+                            <div class="sources" style="margin-top: 8px;">
+                                <strong>Sources (${event.sources.length}):</strong>
+                                ${sourcesList}
+                            </div>`;
+                        return; // Don't append as new box
+                    }
+                    break;
+
+                case 'answer':
+                    const answerBox = document.getElementById(`question-${event.index}`);
+                    if (answerBox) {
+                        answerBox.innerHTML += `
+                            <div style="margin-top: 8px;">
+                                <strong>Answer:</strong>
+                                <pre style="margin: 4px 0;">${event.answer}</pre>
+                            </div>`;
+                        return; // Don't append as new box
+                    }
+                    break;
+
+                case 'all_sources':
+                    const allSourcesList = event.sources.map((url, i) =>
+                        `<a href="${url}" target="_blank">[${i+1}] ${url}</a>`
+                    ).join('');
+                    html = `<div class="event complete">
                         <div class="timestamp">${timestamp}</div>
-                        <strong>Question ${event.index}: ${event.question}</strong>
-                        <pre>${event.answer}</pre>
+                        <strong>📚 All Research Sources (${event.total})</strong>
                         <div class="sources">
-                            <strong>Sources (${event.sources.length}):</strong>
-                            ${sources}
+                            ${allSourcesList}
                         </div>
                     </div>`;
                     break;
@@ -116,17 +148,9 @@
                     break;
 
                 case 'complete':
-                    const allSources = event.all_sources.map((url, i) =>
-                        `<a href="${url}" target="_blank">[${i+1}] ${url}</a>`
-                    ).join('');
                     html = `<div class="event complete">
                         <div class="timestamp">${timestamp}</div>
-                        <strong>✓ Research Complete</strong>
-                        <div>${event.total_sub_questions} questions researched</div>
-                        <div class="sources">
-                            <strong>All Unique Sources (${event.all_sources.length}):</strong>
-                            ${allSources}
-                        </div>
+                        ✓ Research complete (${event.total_sub_questions} questions)
                     </div>`;
                     break;
 
