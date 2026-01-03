@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Research Agent Demo</title>
+    <style>
+        body { font-family: system-ui; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        #query { width: 100%; padding: 12px; font-size: 16px; margin-bottom: 12px; }
+        button { padding: 12px 24px; font-size: 16px; cursor: pointer; background: #0066cc; color: white; border: none; border-radius: 4px; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #output { margin-top: 20px; }
+        .event { padding: 12px; margin: 8px 0; border-left: 3px solid #0066cc; background: #f5f5f5; border-radius: 4px; }
+        .progress { border-left-color: #ff9800; }
+        .plan { border-left-color: #4caf50; background: #e8f5e9; }
+        .sub_result { border-left-color: #2196f3; }
+        .final { border-left-color: #9c27b0; background: #f3e5f5; font-weight: 500; }
+        .complete { border-left-color: #4caf50; background: #e8f5e9; }
+        .error { border-left-color: #f44336; background: #ffebee; color: #c62828; }
+        .timestamp { color: #666; font-size: 12px; }
+        pre { white-space: pre-wrap; margin: 8px 0; }
+        .sources { margin-top: 8px; font-size: 13px; }
+        .sources a { color: #0066cc; text-decoration: none; display: block; margin: 4px 0; }
+        .sources a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>Multi-Agent Research System</h1>
+    <input type="text" id="query" placeholder="Enter your research query..." />
+    <button id="submit">Research</button>
+    <div id="output"></div>
+
+    <script>
+        const queryInput = document.getElementById('query');
+        const submitBtn = document.getElementById('submit');
+        const output = document.getElementById('output');
+
+        submitBtn.addEventListener('click', async () => {
+            const query = queryInput.value.trim();
+            if (!query) return;
+
+            output.innerHTML = '';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:8000/research/stream', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const event = JSON.parse(line.slice(6));
+                            handleEvent(event);
+                        }
+                    }
+                }
+            } catch (error) {
+                output.innerHTML += `<div class="event error">Error: ${error.message}</div>`;
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        function handleEvent(event) {
+            const timestamp = new Date().toLocaleTimeString();
+            let html = '';
+
+            switch (event.type) {
+                case 'progress':
+                    html = `<div class="event progress">
+                        <div class="timestamp">${timestamp}</div>
+                        <div>${event.message}</div>
+                    </div>`;
+                    break;
+
+                case 'plan':
+                    html = `<div class="event plan">
+                        <div class="timestamp">${timestamp}</div>
+                        <strong>Research Plan (${event.total} questions):</strong>
+                        <ol>${event.sub_questions.map(q => `<li>${q}</li>`).join('')}</ol>
+                        <em>${event.reasoning}</em>
+                    </div>`;
+                    break;
+
+                case 'sub_result':
+                    const sources = event.sources.map((url, i) =>
+                        `<a href="${url}" target="_blank">[${i+1}] ${url}</a>`
+                    ).join('');
+                    html = `<div class="event sub_result">
+                        <div class="timestamp">${timestamp}</div>
+                        <strong>Question ${event.index}: ${event.question}</strong>
+                        <pre>${event.answer}</pre>
+                        <div class="sources">
+                            <strong>Sources (${event.sources.length}):</strong>
+                            ${sources}
+                        </div>
+                    </div>`;
+                    break;
+
+                case 'final':
+                    html = `<div class="event final">
+                        <div class="timestamp">${timestamp}</div>
+                        <strong>Final Answer:</strong>
+                        <pre>${event.answer}</pre>
+                    </div>`;
+                    break;
+
+                case 'complete':
+                    const allSources = event.all_sources.map((url, i) =>
+                        `<a href="${url}" target="_blank">[${i+1}] ${url}</a>`
+                    ).join('');
+                    html = `<div class="event complete">
+                        <div class="timestamp">${timestamp}</div>
+                        <strong>✓ Research Complete</strong>
+                        <div>${event.total_sub_questions} questions researched</div>
+                        <div class="sources">
+                            <strong>All Unique Sources (${event.all_sources.length}):</strong>
+                            ${allSources}
+                        </div>
+                    </div>`;
+                    break;
+
+                case 'error':
+                    html = `<div class="event error">
+                        <div class="timestamp">${timestamp}</div>
+                        Error: ${event.message}
+                    </div>`;
+                    break;
+            }
+
+            output.innerHTML += html;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        queryInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') submitBtn.click();
+        });
+    </script>
+</body>
+</html>
