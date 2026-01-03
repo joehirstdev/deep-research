@@ -40,7 +40,7 @@ Final Answer + Sources
    - Orders questions logically (foundational → specific)
    - Provides reasoning for decomposition strategy
 
-2. **Searcher Agent** (`src/main.py:main()`)
+2. **Searcher Agent** (`src/agents/searcher.py`)
    - Executes web searches via Tavily API
    - Retrieves relevant content and context
    - Synthesizes findings with LLM
@@ -215,10 +215,12 @@ deep-research/
 ├── src/
 │   ├── agents/
 │   │   ├── __init__.py
-│   │   └── planner.py          # Query decomposition agent
+│   │   ├── planner.py          # Planner agent - query decomposition
+│   │   ├── searcher.py         # Searcher agent - research with LLM synthesis
+│   │   └── search.py           # Web search tool (Tavily integration)
 │   ├── main.py                  # FastAPI app and endpoints
 │   ├── settings.py              # Pydantic settings
-│   └── tavily.py                # Web search integration
+│   └── utils.py                 # Retry logic and utilities
 ├── static/
 │   └── demo.html                # Interactive demo UI
 ├── pyproject.toml               # Dependencies and config

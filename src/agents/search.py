@@ -7,8 +7,6 @@ from src.utils import retry_with_backoff
 
 
 class SearchResult(BaseModel):
-    """Web search result from Tavily."""
-
     url: str
     title: str
     content: str

@@ -8,16 +8,12 @@ from src.utils import retry_with_backoff
 
 
 class ResearchPlan(BaseModel):
-    """Research plan with decomposed sub-questions."""
-
     original_query: str
     sub_questions: list[str]
     reasoning: str
 
 
 class PlannerAgent:
-    """Agent that breaks down complex queries into researchable sub-questions."""
-
     def __init__(self, llm_client: OpenAI, model: str = "gemini-2.5-flash"):
         self.client = llm_client
         self.model = model

@@ -19,6 +19,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.ruff_cache
 
 # Virtual environments
 venv/
@@ -36,6 +37,7 @@ env/
 *.swp
 *.swo
 *~
+.claude
 
 # OS
 .DS_Store

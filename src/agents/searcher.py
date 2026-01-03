@@ -7,8 +7,6 @@ from src.utils import retry_with_backoff
 
 
 class SearcherAgent:
-    """Agent that researches a single query via web search and LLM synthesis."""
-
     def __init__(
         self, llm_client: OpenAI, search_api_key: str, model: str = "gemini-2.5-flash"
     ):

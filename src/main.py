@@ -49,8 +49,6 @@ class Response(BaseModel):
 
 
 class ResearchRequest(BaseModel):
-    """Request model for research endpoints."""
-
     query: str = Field(..., min_length=1, max_length=1000)
 
     @field_validator("query")
