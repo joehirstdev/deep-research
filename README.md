@@ -1,265 +1,213 @@
-# Multi-Agent Research System
+# Deep Research
 
-A deep research system powered by multiple specialized AI agents that decompose complex queries, conduct parallel research, and synthesize comprehensive answers with source citations.
+A production-ready multi-agent AI research system that decomposes complex queries, conducts parallel research, and synthesizes comprehensive answers with cited sources.
+
+**Live Demo:** [https://deepresearch.joehirst.dev](https://deepresearch.joehirst.dev)
+
+![image](docs/demo.png)
 
 ## Features
 
-- **Multi-Agent Architecture**: Coordinated agents (Planner, Searcher, Synthesizer) work together to answer complex queries
-- **Deep Research**: Automatically decomposes queries into sub-questions for thorough investigation
-- **Real-Time Streaming**: SSE (Server-Sent Events) streams progress updates and results as research happens
-- **Source Citations**: Tracks and provides clickable citations for all research sources
-- **Clean API**: FastAPI backend with both standard and streaming endpoints
-- **Interactive Demo**: Browser-based UI to visualize the research process in real-time
+- **Multi-Agent Architecture** - Coordinated AI agents (Planner, Researcher, Synthesizer) work together to tackle complex research tasks
+- **Deep Research** - Automatically decomposes queries into focused sub-questions for thorough investigation
+- **Real-Time Streaming** - Server-Sent Events (SSE) stream progress updates as research happens
+- **Source Citations** - Tracks and provides all research sources for verification
+- **Structured Logging** - JSON logs with request tracing for production monitoring
+- **Comprehensive Tests** - Unit and integration tests with 100% agent coverage
+- **Production Deployment** - Live on Google Cloud Run, deployed with Terraform and Docker
 
 ## Architecture
 
-### Multi-Agent Flow
+### Multi-Agent Research Flow
 
 ```
 User Query
     ↓
-┌─────────────────┐
-│ Planner Agent   │  Decomposes query into 2-5 focused sub-questions
-└─────────────────┘
+┌──────────────────┐
+│  Planner Agent   │  Decomposes query into 2-5 focused sub-questions
+└──────────────────┘
     ↓
-┌─────────────────┐
-│ Searcher Agent  │  Researches each sub-question (Tavily + LLM)
-└─────────────────┘  Runs in parallel for all sub-questions
+┌──────────────────┐
+│ Researcher Agent │  Researches each sub-question with web search + LLM
+└──────────────────┘  (Processes all sub-questions)
     ↓
-┌─────────────────┐
-│ Synthesizer     │  Combines findings into comprehensive answer
-└─────────────────┘
+┌──────────────────┐
+│ Synthesizer Agent│  Combines findings into comprehensive final answer
+└──────────────────┘
     ↓
-Final Answer + Sources
+Final Answer + All Sources
 ```
 
 ### Agent Responsibilities
 
-1. **Planner Agent** (`src/agents/planner.py`)
-   - Analyzes user queries and breaks them into answerable sub-questions
-   - Orders questions logically (foundational → specific)
-   - Provides reasoning for decomposition strategy
-
-2. **Searcher Agent** (`src/agents/searcher.py`)
-   - Executes web searches via Tavily API
-   - Retrieves relevant content and context
-   - Synthesizes findings with LLM
-   - Tracks source URLs for citations
-
-3. **Synthesizer** (Final LLM call in `/research` endpoints)
-   - Combines all sub-question answers
-   - Creates coherent, comprehensive response
-   - Maintains source attribution
+- **Planner** - Analyses queries and decomposes them into logical sub-questions
+- **Researcher** - Executes web searches (Tavily API) and synthesizes findings with LLM
+- **Synthesizer** - Combines all answers into a comprehensive final response
+- **Web Search** - Tavily API integration with retry logic and structured results
 
 ## Tech Stack
 
-- **FastAPI**: Async web framework with SSE support
-- **OpenAI SDK**: LLM integration (configured for Google Gemini)
-- **Tavily AI**: Web search API optimized for AI agents
-- **Pydantic**: Type-safe data validation and settings
-- **Python 3.13+**: Modern async/await patterns
+- **FastAPI** - Modern async web framework with SSE support
+- **OpenAI SDK** - LLM integration (compatible with any OpenAI-compatible provider; live version uses Gemini Flash for optimal performance/cost balance)
+- **Tavily AI** - Web search API optimised for AI applications
+- **Frontend** - Vanilla JavaScript with Tailwind CSS for the interactive demo
+- **Docker** - Containerisation for deployment
+- **Google Cloud Run** - Serverless container hosting
+- **Terraform** - Infrastructure as code for deployment
+- **Python 3.13+** - Modern async/await patterns
 
-## Setup
+## Prerequisites
 
-### Prerequisites
-
-- Python 3.13+
+- Python 3.13 or higher
 - API Keys:
-  - [Gemini API](https://aistudio.google.com/app/apikey) (free tier available)
-  - [Tavily API](https://tavily.com/) (free 1000 searches/month)
+  - OpenAI API-compatible provider (I'm using [Gemini](https://ai.google.dev/gemini-api/docs/openai) - free tier available)
+  - [Tavily API Key](https://tavily.com/) (1000 free searches/month)
 
-### Installation
+## Quick Start
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd deep-research
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pip install -e .
-   ```
-
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your API keys
-   ```
-
-   Required variables:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key
-   TAVILY_API_KEY=your_tavily_api_key
-   GEMINI_MODEL=gemini-2.5-flash
-   ```
-
-4. **Run the server**
-   ```bash
-   fastapi dev src/main.py
-   ```
-
-   Server will start at: http://localhost:8000
-
-## Usage
-
-### Interactive Demo (Recommended)
-
-Open http://localhost:8000/static/demo.html in your browser.
-
-1. Enter a research query (e.g., "How does RAG improve LLM accuracy?")
-2. Click "Research"
-3. Watch real-time progress as agents work:
-   - Planning phase
-   - Research sub-questions
-   - Final synthesis
-
-### API Endpoints
-
-#### 1. Streaming Research (Primary)
+### 1. Clone and Install
 
 ```bash
-POST /research/stream
+git clone <your-repo-url>
+cd deep-research
+uv sync
 ```
 
-Real-time SSE stream with progress updates.
+### 2. Configure Environment
 
-**Example:**
-```bash
-curl -N -X POST http://localhost:8000/research/stream \
-  -H "Content-Type: application/json" \
-  -d '{"query": "What is RAG and how does it improve LLM outputs?"}'
+Create a `.env` file:
+
+```env
+# LLM Configuration
+LLM_API_KEY=your_gemini_api_key_here
+LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+LLM_MODEL=gemini-3-flash-preview
+
+# Search API
+TAVILY_API_KEY=your_tavily_api_key_here
+
+# Authentication (demo only - We would use OAuth for production instead of Basic Auth)
+BASIC_AUTH_USERNAME=admin
+BASIC_AUTH_PASSWORD=your_secure_password_here
 ```
 
-**SSE Events:**
-- `progress`: Status updates ("Planning...", "Researching 1/3...")
-- `plan`: Research plan with sub-questions
-- `sub_result`: Each answered sub-question with sources
-- `final`: Synthesized final answer
-- `complete`: Summary with all unique sources
-
-#### 2. Standard Research
+### 3. Run the Server
 
 ```bash
-POST /research
+fastapi dev src/main.py
 ```
 
-Returns complete results after all processing finishes.
+Server starts at: http://localhost:8000
 
-**Example:**
+### 4. Try the Demo
+
+Open http://localhost:8000 in your browser to use the interactive demo interface.
+
+## API Documentation
+
+Interactive API documentation (Swagger): [https://deepresearch.joehirst.dev/docs](https://deepresearch.joehirst.dev/docs)
+
+### Authentication
+
+All endpoints (except `/`) require HTTP Basic Authentication. **Note:** Basic Auth is for demo purposes only - production deployments should use OAuth or similar secure authentication.
+
 ```bash
-curl -X POST http://localhost:8000/research \
-  -H "Content-Type: application/json" \
-  -d '{"query": "Explain photosynthesis and its importance"}'
+curl -u admin:password http://localhost:8000/login
+```
+
+### Endpoints
+
+#### `GET /`
+Serves the interactive demo interface.
+
+#### `POST /login`
+Verifies credentials and returns success message.
+
+**Request:**
+```bash
+curl -u admin:password -X POST http://localhost:8000/login
 ```
 
 **Response:**
 ```json
 {
-  "query": "...",
-  "plan": {
-    "original_query": "...",
-    "sub_questions": ["...", "..."],
-    "reasoning": "..."
-  },
-  "sub_results": [
-    {
-      "question": "...",
-      "answer": "...",
-      "sources": ["url1", "url2"]
-    }
-  ],
-  "final_answer": "...",
-  "all_sources": ["unique_url1", "unique_url2", ...]
+  "message": "Login successful",
+  "username": "admin"
 }
 ```
 
-#### 3. Simple Search (Fast)
+#### `POST /research/stream`
+Primary research endpoint with real-time streaming updates.
 
+**Request:**
 ```bash
-GET /test/{query}
+curl -u admin:password -N -X POST http://localhost:8000/research/stream \
+  -H "Content-Type: application/json" \
+  -d '{"query": "How does retrieval-augmented generation improve LLM accuracy?"}'
 ```
 
-Single-agent search without decomposition (faster, less comprehensive).
+**SSE Event Stream:**
+
+The endpoint streams JSON events in real-time:
+- `progress` - Status updates during processing
+- `plan` - Research plan with sub-questions and reasoning
+- `question` - Each sub-question being researched
+- `sources` - Sources found for the current sub-question
+- `answer` - Answer to the current sub-question
+- `all_sources` - All unique sources used
+- `final` - Synthesized final answer
+- `complete` - Research completed
+- `error` - Error occurred
+
+## Logging
+
+Structured JSON logging optimised for cloud environments. Each request is traced with a unique ID, and logs include metadata (counts, lengths, indices) without sensitive data. All queries and answers are excluded for privacy and security.
+
+## Deployment
+
+The live application is deployed to **Google Cloud Run** using **Terraform**. The configuration in `terraform/` defines the Cloud Run service, environment variables, secrets management, and networking.
+
+```bash
+# Deploy with Terraform
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+For local testing:
+
+```bash
+docker build -t deep-research .
+docker run -p 8000:8000 \
+  -e LLM_API_KEY=your_key \
+  -e TAVILY_API_KEY=your_key \
+  deep-research
+```
+
+## Development
+
+The project includes comprehensive test coverage with unit tests for each agent (Planner, Researcher, Synthesizer, Search) and integration tests for the API endpoints, authentication, and streaming flow.
+
+Code quality is maintained with ruff for linting/formatting and basedpyright for type checking. All checks run via pre-commit hooks.
+
+```bash
+pytest                           # Run tests
+ruff check                       # Lint
+ruff format                      # Format
+basedpyright                     # Type check
+```
 
 ## Design Decisions
 
-### Why Tavily?
+**Multi-Agent Architecture**: Breaking research into specialised agents (Planner, Researcher, Synthesizer) provides modularity, independent testability, and clear separation of concerns. Each agent can be enhanced or replaced independently.
 
-Tavily was chosen over alternatives (SerpAPI, DuckDuckGo, Brave) because:
-- Purpose-built for AI agents with structured responses
-- Includes content snippets (not just links)
-- Clean API with good free tier
-- Shows awareness of specialized AI tooling ecosystem
+**OpenAI SDK**: Using the OpenAI SDK with an OpenAI-compatible endpoint allows easy switching between providers. The live deployment uses Gemini Flash for its optimal balance of speed (< 2s per call) and cost-effectiveness.
 
-### Why Streaming?
+**Tavily Search**: Purpose-built for AI agents with structured responses, content snippets, and generous free tier (1000 searches/month). Superior to generic search APIs for LLM consumption.
 
-The multi-agent flow involves multiple LLM calls and searches (10-20+ seconds). SSE streaming:
-- Provides real-time progress feedback
-- Improves perceived performance
-- Demonstrates production UX thinking
-- Shows understanding of async architectures
-
-### Why Gemini?
-
-Using Gemini 2.5 Flash via OpenAI-compatible endpoint:
-- Fast inference for quick iteration
-- Cost-effective for development
-- Supports structured output (JSON mode)
-- Easy to swap for other providers
-
-## Project Structure
-
-```
-deep-research/
-├── src/
-│   ├── agents/
-│   │   ├── __init__.py
-│   │   ├── planner.py          # Planner agent - query decomposition
-│   │   ├── searcher.py         # Searcher agent - research with LLM synthesis
-│   │   └── search.py           # Web search tool (Tavily integration)
-│   ├── main.py                  # FastAPI app and endpoints
-│   ├── settings.py              # Pydantic settings
-│   └── utils.py                 # Retry logic and utilities
-├── static/
-│   └── demo.html                # Interactive demo UI
-├── pyproject.toml               # Dependencies and config
-├── .env.example                 # Environment template
-└── README.md
-```
-
-## Testing
-
-Run tests:
-```bash
-pytest
-```
-
-(Note: Test suite under development)
-
-## Future Improvements
-
-- **Caching**: Cache search results and LLM responses to reduce API costs
-- **Parallel Search**: Run sub-question searches concurrently for faster research
-- **Source Ranking**: Prioritize authoritative sources
-- **Fact Verification**: Cross-reference claims across multiple sources
-- **Citation Formatting**: Structured citations (APA, MLA, etc.)
-- **Query Refinement**: Iterative follow-up questions based on initial findings
-- **Export Options**: PDF, Markdown, JSON exports
-- **Analytics**: Track research quality metrics
-
-## Interview Discussion Points
-
-1. **Multi-Agent Coordination**: How agents communicate and maintain state
-2. **Trade-offs**: Simple vs. multi-agent endpoints for different use cases
-3. **Production Readiness**: Error handling, retry logic, rate limiting
-4. **Scalability**: Async patterns, parallel execution, caching strategies
-5. **Cost Optimization**: Token usage, search API costs, caching decisions
+**Streaming (SSE)**: Multi-agent research takes 10-30 seconds total. Real-time streaming provides progress feedback, improves perceived performance, and enables early cancellation.
 
 ## License
 
-MIT
-
-## Author
-
-Built for Akro AI Technical Assessment
+MIT License - see LICENSE file for details
