@@ -12,7 +12,7 @@
         }
     </script>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen py-8 px-4">
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen py-8 px-4">
     <div class="max-w-4xl mx-auto">
         <!-- Theme toggle and logout (top right) -->
         <div class="flex justify-end gap-2 mb-4">
@@ -247,6 +247,14 @@
 
             output.innerHTML = '';
             submitBtn.disabled = true;
+
+            // Display the user's query
+            const timestamp = new Date().toLocaleTimeString();
+            output.innerHTML += createEventBox('plan', `
+                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">${timestamp}</div>
+                <div class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Research Query:</div>
+                <div class="text-gray-800 dark:text-gray-200">${query}</div>
+            `);
 
             try {
                 const credentials = sessionStorage.getItem('credentials');
