@@ -4,13 +4,22 @@ resource "google_cloud_run_v2_service" "deep_research_app" {
   ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
+
+    # Configure max instances of applicatoin
+    scaling {
+      max_instance_count = 1
+      min_instance_count = 0
+    }
+
     containers {
       image = var.image_path
 
+      # FastAPI port
       ports {
         container_port = 8000
       }
 
+      # Provision resources for container
       resources {
         limits = {
           cpu    = "0.5"
@@ -19,6 +28,7 @@ resource "google_cloud_run_v2_service" "deep_research_app" {
         cpu_idle = true
       }
 
+      # Load env vars into container
       dynamic "env" {
         for_each = var.env_vars
         content {
