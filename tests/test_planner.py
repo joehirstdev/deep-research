@@ -1,6 +1,7 @@
 """Tests for PlannerAgent."""
 
 from unittest.mock import Mock
+
 from src.agents.planner import PlannerAgent, ResearchPlan
 
 
@@ -21,7 +22,7 @@ def test_planner_decomposes_query():
     mock_client.chat.completions.create.return_value = mock_response
 
     # Create planner with mock client
-    planner = PlannerAgent(llm_client=mock_client)
+    planner = PlannerAgent(llm_client=mock_client, model="test-model")
 
     # Test
     result = planner.plan("Explain photosynthesis and its importance")

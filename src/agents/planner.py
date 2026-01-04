@@ -1,10 +1,10 @@
 """Planner Agent: Decomposes complex queries into focused sub-questions."""
 
 import json
-from pydantic import BaseModel, field_validator
-from openai import OpenAI
 
-from src.utils import retry_with_backoff
+from openai import OpenAI
+from pydantic import BaseModel
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 
 class ResearchPlan(BaseModel):
@@ -14,19 +14,13 @@ class ResearchPlan(BaseModel):
 
 
 class PlannerAgent:
-    def __init__(self, llm_client: OpenAI, model: str = "gemini-2.5-flash"):
+    def __init__(self, llm_client: OpenAI, model: str) -> None:
         self.client = llm_client
         self.model = model
 
-    @retry_with_backoff(max_retries=3)
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=1, max=10))
     def plan(self, query: str) -> ResearchPlan:
         """Decompose a complex query into focused sub-questions."""
-        if not query or not query.strip():
-            raise ValueError("Query cannot be empty")
-
-        if len(query) > 1000:
-            raise ValueError("Query too long (max 1000 characters)")
-
         system_prompt = """You are a research planning expert. Your job is to break down complex queries into focused, answerable sub-questions.
 
 Guidelines:
@@ -42,37 +36,25 @@ Return your response in this JSON format:
     "reasoning": "Brief explanation of why these questions cover the query"
 }"""
 
-        user_prompt = (
-            f"Original query: {query}\n\nDecompose this into focused sub-questions."
+        user_prompt = f"Original query: {query}\n\nDecompose this into focused sub-questions."
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            reasoning_effort="medium",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            response_format={"type": "json_object"},
         )
 
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                reasoning_effort="medium",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                response_format={"type": "json_object"},
-            )
+        content = response.choices[0].message.content
+        if not content:
+            raise ValueError("Empty response")
+        parsed = json.loads(content)
 
-            content = response.choices[0].message.content
-            if not content:
-                raise ValueError("Empty response from LLM")
-
-            parsed = json.loads(content)
-
-            if "sub_questions" not in parsed:
-                raise ValueError("LLM response missing 'sub_questions' field")
-
-            return ResearchPlan(
-                original_query=query,
-                sub_questions=parsed["sub_questions"],
-                reasoning=parsed.get("reasoning", "No reasoning provided"),
-            )
-
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse LLM response as JSON: {e}")
-        except Exception as e:
-            raise RuntimeError(f"Failed to generate research plan: {e}")
+        return ResearchPlan(
+            original_query=query,
+            sub_questions=parsed["sub_questions"],
+            reasoning=parsed.get("reasoning", "No reasoning provided"),
+        )
