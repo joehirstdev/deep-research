@@ -2,11 +2,14 @@
 
 import asyncio
 import json
+import secrets
 from collections.abc import AsyncGenerator
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from pydantic import BaseModel, Field
@@ -17,6 +20,26 @@ from src.agents.synthesizer import SynthesizerAgent
 from src.settings import Settings
 
 settings = Settings()  # pyright: ignore [reportCallIssue]
+
+security = HTTPBasic()
+
+
+def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) -> str:
+    """Verify Basic Auth credentials."""
+    correct_username = secrets.compare_digest(
+        credentials.username.encode("utf8"), settings.basic_auth_username.encode("utf8")
+    )
+    correct_password = secrets.compare_digest(
+        credentials.password.encode("utf8"), settings.basic_auth_password.encode("utf8")
+    )
+
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
 
 
 app = FastAPI()
@@ -47,8 +70,16 @@ class ResearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=1000)
 
 
+@app.post("/login")
+async def login(username: Annotated[str, Depends(verify_credentials)]) -> dict[str, str]:
+    """Verify credentials and return success."""
+    return {"message": "Login successful", "username": username}
+
+
 @app.post("/research/stream")
-async def research_stream(request: ResearchRequest) -> StreamingResponse:
+async def research_stream(
+    request: ResearchRequest, username: Annotated[str, Depends(verify_credentials)]
+) -> StreamingResponse:
     """Streaming multi-agent research endpoint with real-time progress updates."""
     query = request.query
 

@@ -14,37 +14,94 @@
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen py-8 px-4">
     <div class="max-w-4xl mx-auto">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-6">
-            <div class="flex items-center justify-between mb-6">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Multi-Agent Research System</h1>
-                <button
-                    id="theme-toggle"
-                    class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                    aria-label="Toggle theme"
-                >
-                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-gray-800 dark:text-gray-200" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-                    </svg>
-                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-gray-800 dark:text-gray-200" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
-                    </svg>
-                </button>
-            </div>
-            <input
-                type="text"
-                id="query"
-                placeholder="Enter your research query..."
-                class="w-full px-4 py-3 text-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
-            />
+        <!-- Theme toggle and logout (top right) -->
+        <div class="flex justify-end gap-2 mb-4">
             <button
-                id="submit"
-                class="w-full sm:w-auto px-6 py-3 text-lg font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                id="logout-btn"
+                class="hidden px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 shadow-md rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
-                Research
+                Logout
+            </button>
+            <button
+                id="theme-toggle"
+                class="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Toggle theme"
+            >
+                <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-gray-800 dark:text-gray-200" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+                <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-gray-800 dark:text-gray-200" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+                </svg>
             </button>
         </div>
 
-        <div id="output" class="space-y-4"></div>
+        <!-- Login Screen -->
+        <div id="login-screen" class="max-w-md mx-auto">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">Multi-Agent Research System</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-6 text-center">Please sign in to continue</p>
+
+                <div id="login-error" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200 text-sm"></div>
+
+                <div class="space-y-4">
+                    <input
+                        type="text"
+                        id="login-username"
+                        placeholder="Username"
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="login-password"
+                            placeholder="Password"
+                            class="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <button
+                            type="button"
+                            id="toggle-password"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                        >
+                            <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            <svg id="eye-slash-icon" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <button
+                        id="login-btn"
+                        class="w-full px-6 py-3 text-lg font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                    >
+                        Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Research Interface (hidden initially) -->
+        <div id="research-interface" class="hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-6">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Multi-Agent Research System</h1>
+                <input
+                    type="text"
+                    id="query"
+                    placeholder="Enter your research query..."
+                    class="w-full px-4 py-3 text-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
+                />
+                <button
+                    id="submit"
+                    class="w-full sm:w-auto px-6 py-3 text-lg font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                >
+                    Research
+                </button>
+            </div>
+
+            <div id="output" class="space-y-4"></div>
+        </div>
     </div>
 
     <script>
@@ -87,12 +144,102 @@
             });
         }
 
+        // Login and authentication
+        const loginScreen = document.getElementById('login-screen');
+        const researchInterface = document.getElementById('research-interface');
+        const loginUsernameInput = document.getElementById('login-username');
+        const loginPasswordInput = document.getElementById('login-password');
+        const loginBtn = document.getElementById('login-btn');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
         const queryInput = document.getElementById('query');
         const submitBtn = document.getElementById('submit');
         const output = document.getElementById('output');
 
+        // Password visibility toggle
+        const togglePasswordBtn = document.getElementById('toggle-password');
+        const eyeIcon = document.getElementById('eye-icon');
+        const eyeSlashIcon = document.getElementById('eye-slash-icon');
+
+        togglePasswordBtn.addEventListener('click', () => {
+            if (loginPasswordInput.type === 'password') {
+                loginPasswordInput.type = 'text';
+                eyeIcon.classList.add('hidden');
+                eyeSlashIcon.classList.remove('hidden');
+            } else {
+                loginPasswordInput.type = 'password';
+                eyeIcon.classList.remove('hidden');
+                eyeSlashIcon.classList.add('hidden');
+            }
+        });
+
+        // Check if already logged in
+        const storedCredentials = sessionStorage.getItem('credentials');
+        if (storedCredentials) {
+            showResearchInterface();
+        }
+
+        // Login handler
+        loginBtn.addEventListener('click', async () => {
+            const username = loginUsernameInput.value.trim();
+            const password = loginPasswordInput.value.trim();
+
+            if (!username || !password) {
+                showLoginError('Please enter username and password');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginError.classList.add('hidden');
+
+            try {
+                // Verify credentials with login endpoint
+                const credentials = btoa(`${username}:${password}`);
+                const response = await fetch('http://localhost:8000/login', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Basic ${credentials}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    showLoginError('Invalid username or password');
+                    loginBtn.disabled = false;
+                    return;
+                }
+
+                if (!response.ok) {
+                    showLoginError('Server error. Please try again.');
+                    loginBtn.disabled = false;
+                    return;
+                }
+
+                // Store credentials and show research interface
+                sessionStorage.setItem('credentials', credentials);
+                showResearchInterface();
+            } catch (error) {
+                showLoginError('Connection error. Please try again.');
+                loginBtn.disabled = false;
+            }
+        });
+
+        // Logout handler
+        logoutBtn.addEventListener('click', () => {
+            sessionStorage.removeItem('credentials');
+            output.innerHTML = '';
+            queryInput.value = '';
+            loginUsernameInput.value = '';
+            loginPasswordInput.value = '';
+            loginScreen.classList.remove('hidden');
+            researchInterface.classList.add('hidden');
+            logoutBtn.classList.add('hidden');
+            loginBtn.disabled = false;
+        });
+
+        // Research submit handler
         submitBtn.addEventListener('click', async () => {
             const query = queryInput.value.trim();
+
             if (!query) {
                 alert('Please enter a research query');
                 return;
@@ -102,11 +249,26 @@
             submitBtn.disabled = true;
 
             try {
+                const credentials = sessionStorage.getItem('credentials');
+
                 const response = await fetch('http://localhost:8000/research/stream', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Basic ${credentials}`
+                    },
                     body: JSON.stringify({ query })
                 });
+
+                // Check for authentication error
+                if (response.status === 401) {
+                    sessionStorage.removeItem('credentials');
+                    loginScreen.classList.remove('hidden');
+                    researchInterface.classList.add('hidden');
+                    logoutBtn.classList.add('hidden');
+                    showLoginError('Session expired. Please login again.');
+                    return;
+                }
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
@@ -288,6 +450,23 @@
                 output.scrollTop = output.scrollHeight;
             }
         }
+
+        // Helper functions
+        function showLoginError(message) {
+            loginError.textContent = message;
+            loginError.classList.remove('hidden');
+        }
+
+        function showResearchInterface() {
+            loginScreen.classList.add('hidden');
+            researchInterface.classList.remove('hidden');
+            logoutBtn.classList.remove('hidden');
+        }
+
+        // Enter key support
+        loginPasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loginBtn.click();
+        });
 
         queryInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') submitBtn.click();

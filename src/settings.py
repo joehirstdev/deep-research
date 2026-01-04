@@ -9,3 +9,5 @@ class Settings(BaseSettings):
     llm_model: str = Field(..., alias="LLM_MODEL")
     llm_base_url: str = Field(..., alias="LLM_BASE_URL")
     tavily_api_key: str = Field(..., alias="TAVILY_API_KEY")
+    basic_auth_username: str = Field(..., alias="BASIC_AUTH_USERNAME")
+    basic_auth_password: str = Field(..., alias="BASIC_AUTH_PASSWORD")
