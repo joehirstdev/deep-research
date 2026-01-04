@@ -1,9 +1,12 @@
 """Researcher Agent: Researches individual queries using web search + LLM synthesis."""
 
+import structlog
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from src.agents.search import SearchResult, web_search
+
+logger = structlog.get_logger()
 
 
 class ResearcherAgent:
@@ -18,12 +21,14 @@ class ResearcherAgent:
         search_results = web_search(query, self.search_api_key, max_results=3)
 
         if not search_results:
+            logger.warning("no_search_results")
             return "No search results found for this query.", []
 
         context_content = self._format_context(search_results)
         links = [result.url for result in search_results]
         answer = self._synthesize_answer(query, context_content)
 
+        logger.debug("research_completed", sources_count=len(links))
         return answer, links
 
     def get_sources(self, query: str) -> list[str]:

@@ -1,7 +1,10 @@
 """Synthesizer Agent: Combines research findings into comprehensive answers."""
 
+import structlog
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
+
+logger = structlog.get_logger()
 
 
 class SynthesizerAgent:
@@ -31,5 +34,7 @@ class SynthesizerAgent:
 
         content = response.choices[0].message.content
         if not content:
+            logger.error("synthesizer_empty_response")
             raise ValueError("Empty response")
+        logger.debug("synthesis_completed", sub_results_count=len(sub_results))
         return content

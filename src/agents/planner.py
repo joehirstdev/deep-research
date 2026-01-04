@@ -2,9 +2,12 @@
 
 import json
 
+import structlog
 from openai import OpenAI
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_exponential
+
+logger = structlog.get_logger()
 
 
 class ResearchPlan(BaseModel):
@@ -50,11 +53,14 @@ Return your response in this JSON format:
 
         content = response.choices[0].message.content
         if not content:
+            logger.error("planner_empty_response")
             raise ValueError("Empty response")
         parsed = json.loads(content)
 
-        return ResearchPlan(
+        plan = ResearchPlan(
             original_query=query,
             sub_questions=parsed["sub_questions"],
             reasoning=parsed.get("reasoning", "No reasoning provided"),
         )
+        logger.debug("plan_created", sub_questions_count=len(plan.sub_questions))
+        return plan
