@@ -24,7 +24,7 @@ class SynthesizerAgent:
                 },
                 {
                     "role": "user",
-                    "content": f"Original query: {query}\n\nFindings:\n{synthesis_context}\n\nProvide a comprehensive answer with citations.",
+                    "content": f"Original query: {query}\n\nFindings:\n{synthesis_context}\n\nProvide a comprehensive answer.",
                 },
             ],
         )

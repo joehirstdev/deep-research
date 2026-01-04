@@ -1,41 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Research Agent Demo</title>
-    <style>
-        body { font-family: system-ui; max-width: 900px; margin: 40px auto; padding: 0 20px; }
-        #query { width: 100%; padding: 12px; font-size: 16px; margin-bottom: 12px; }
-        button { padding: 12px 24px; font-size: 16px; cursor: pointer; background: #0066cc; color: white; border: none; border-radius: 4px; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        #output { margin-top: 20px; }
-        .event { padding: 12px; margin: 8px 0; border-left: 3px solid #0066cc; background: #f5f5f5; border-radius: 4px; }
-        .progress { border-left-color: #ff9800; }
-        .plan { border-left-color: #4caf50; background: #e8f5e9; }
-        .sub_result { border-left-color: #2196f3; }
-        .final { border-left-color: #9c27b0; background: #f3e5f5; font-weight: 500; }
-        .complete { border-left-color: #4caf50; background: #e8f5e9; }
-        .error { border-left-color: #f44336; background: #ffebee; color: #c62828; }
-        .timestamp { color: #666; font-size: 12px; }
-        pre { white-space: pre-wrap; margin: 8px 0; }
-        .sources { margin-top: 8px; font-size: 13px; }
-        .sources a { color: #0066cc; text-decoration: none; display: block; margin: 4px 0; }
-        .sources a:hover { text-decoration: underline; }
-    </style>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
 </head>
-<body>
-    <h1>Multi-Agent Research System</h1>
-    <input type="text" id="query" placeholder="Enter your research query..." />
-    <button id="submit">Research</button>
-    <div id="output"></div>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen py-8 px-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-6">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Multi-Agent Research System</h1>
+                <button
+                    id="theme-toggle"
+                    class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    aria-label="Toggle theme"
+                >
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-gray-800 dark:text-gray-200" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-gray-800 dark:text-gray-200" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+            <input
+                type="text"
+                id="query"
+                placeholder="Enter your research query..."
+                class="w-full px-4 py-3 text-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
+            />
+            <button
+                id="submit"
+                class="w-full sm:w-auto px-6 py-3 text-lg font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+            >
+                Research
+            </button>
+        </div>
+
+        <div id="output" class="space-y-4"></div>
+    </div>
 
     <script>
+        // Theme toggle functionality
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+        if (themeToggleBtn && themeToggleDarkIcon && themeToggleLightIcon) {
+            // Get theme from localStorage or default to system preference
+            const getInitialTheme = () => {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    return savedTheme;
+                }
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            };
+
+            // Set theme and update icons
+            const setTheme = (theme) => {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    themeToggleLightIcon.classList.remove('hidden');
+                    themeToggleDarkIcon.classList.add('hidden');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    themeToggleDarkIcon.classList.remove('hidden');
+                    themeToggleLightIcon.classList.add('hidden');
+                }
+                localStorage.setItem('theme', theme);
+            };
+
+            // Initialize theme
+            setTheme(getInitialTheme());
+
+            // Toggle theme on button click
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            });
+        }
+
         const queryInput = document.getElementById('query');
         const submitBtn = document.getElementById('submit');
         const output = document.getElementById('output');
 
         submitBtn.addEventListener('click', async () => {
             const query = queryInput.value.trim();
-            if (!query) return;
+            if (!query) {
+                alert('Please enter a research query');
+                return;
+            }
 
             output.innerHTML = '';
             submitBtn.disabled = true;
@@ -65,11 +126,39 @@
                     }
                 }
             } catch (error) {
-                output.innerHTML += `<div class="event error">Error: ${error.message}</div>`;
+                output.innerHTML += createEventBox('error', `
+                    <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">${new Date().toLocaleTimeString()}</div>
+                    <div class="font-medium">Error: ${error.message}</div>
+                `);
             } finally {
                 submitBtn.disabled = false;
             }
         });
+
+        function createEventBox(type, content) {
+            const colors = {
+                progress: 'border-l-orange-500 bg-orange-50 dark:bg-orange-950/30',
+                plan: 'border-l-green-500 bg-green-50 dark:bg-green-950/30',
+                sub_result: 'border-l-blue-500 bg-blue-50 dark:bg-blue-950/30',
+                final: 'border-l-purple-500 bg-purple-50 dark:bg-purple-950/30',
+                complete: 'border-l-green-500 bg-green-50 dark:bg-green-950/30',
+                error: 'border-l-red-500 bg-red-50 dark:bg-red-950/30 text-red-900 dark:text-red-200'
+            };
+
+            return `<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-l-4 ${colors[type] || 'border-l-gray-500'}">${content}</div>`;
+        }
+
+        function createSpinner(text = 'Loading...') {
+            return `
+                <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
+                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>${text}</span>
+                </div>
+            `;
+        }
 
         function handleEvent(event) {
             const timestamp = new Date().toLocaleTimeString();
@@ -77,93 +166,127 @@
 
             switch (event.type) {
                 case 'progress':
-                    html = `<div class="event progress">
-                        <div class="timestamp">${timestamp}</div>
-                        <div>${event.message}</div>
-                    </div>`;
+                    // Determine ID based on message content
+                    const progressId = event.message.includes('Planning') ? 'progress-planning' : 'progress-synthesis';
+                    html = `<div id="${progressId}">` + createEventBox('progress', `
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">${timestamp}</div>
+                        <div class="flex items-center gap-2">
+                            <svg class="animate-spin h-5 w-5 text-orange-600 dark:text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <div class="text-gray-900 dark:text-gray-100">${event.message}</div>
+                        </div>
+                    `) + `</div>`;
                     break;
 
                 case 'plan':
-                    html = `<div class="event plan">
-                        <div class="timestamp">${timestamp}</div>
-                        <strong>Research Plan (${event.total} questions):</strong>
-                        <ol>${event.sub_questions.map(q => `<li>${q}</li>`).join('')}</ol>
-                        <em>${event.reasoning}</em>
-                    </div>`;
+                    // Remove planning progress spinner
+                    const planningProgress = document.getElementById('progress-planning');
+                    if (planningProgress) {
+                        planningProgress.remove();
+                    }
+
+                    const questions = event.sub_questions.map(q => `<li class="mb-2 text-gray-800 dark:text-gray-200">${q}</li>`).join('');
+                    html = createEventBox('plan', `
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">${timestamp}</div>
+                        <div class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Research Plan (${event.total} questions):</div>
+                        <ol class="list-decimal list-inside space-y-1 mb-3">${questions}</ol>
+                        <div class="text-sm italic text-gray-600 dark:text-gray-400">${event.reasoning}</div>
+                    `);
                     break;
 
                 case 'question':
-                    html = `<div class="event sub_result" id="question-${event.index}">
-                        <div class="timestamp">${timestamp}</div>
-                        <strong>Question ${event.index}/${event.total}: ${event.question}</strong>
-                    </div>`;
+                    html = createEventBox('sub_result', `
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">${timestamp}</div>
+                        <div class="font-semibold text-gray-900 dark:text-gray-100">Question ${event.index}/${event.total}: ${event.question}</div>
+                        <div id="question-content-${event.index}" class="mt-3">
+                            ${createSpinner('Finding sources...')}
+                        </div>
+                    `);
                     break;
 
                 case 'sources':
                     const sourcesList = event.sources.map((url, i) =>
-                        `<a href="${url}" target="_blank">[${i+1}] ${url}</a>`
+                        `<a href="${url}" target="_blank" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline mb-1">[${i+1}] ${url}</a>`
                     ).join('');
-                    const questionBox = document.getElementById(`question-${event.index}`);
-                    if (questionBox) {
-                        questionBox.innerHTML += `
-                            <div class="sources" style="margin-top: 8px;">
-                                <strong>Sources (${event.sources.length}):</strong>
-                                ${sourcesList}
-                            </div>`;
-                        return; // Don't append as new box
+                    const questionContent = document.getElementById(`question-content-${event.index}`);
+                    if (questionContent) {
+                        questionContent.innerHTML = `
+                            <div class="mt-2">
+                                <div class="font-medium text-gray-700 dark:text-gray-300 text-sm mb-2">Sources (${event.sources.length}):</div>
+                                <div class="space-y-1">${sourcesList}</div>
+                            </div>
+                            <div class="mt-4">${createSpinner('Generating answer...')}</div>
+                        `;
+                        return;
                     }
                     break;
 
                 case 'answer':
-                    const answerBox = document.getElementById(`question-${event.index}`);
-                    if (answerBox) {
-                        answerBox.innerHTML += `
-                            <div style="margin-top: 8px;">
-                                <strong>Answer:</strong>
-                                <pre style="margin: 4px 0;">${event.answer}</pre>
+                    const answerContent = document.getElementById(`question-content-${event.index}`);
+                    if (answerContent) {
+                        // Remove the spinner and show answer
+                        const sourcesDiv = answerContent.querySelector('div:first-child');
+                        answerContent.innerHTML = '';
+                        if (sourcesDiv) {
+                            answerContent.appendChild(sourcesDiv);
+                        }
+                        const renderedAnswer = marked.parse(event.answer);
+                        answerContent.innerHTML += `
+                            <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                <div class="font-medium text-gray-700 dark:text-gray-300 text-sm mb-2">Answer:</div>
+                                <div class="prose prose-sm prose-blue dark:prose-invert prose-slate max-w-none [&>p]:my-2">${renderedAnswer}</div>
                             </div>`;
-                        return; // Don't append as new box
+                        return;
                     }
                     break;
 
                 case 'all_sources':
                     const allSourcesList = event.sources.map((url, i) =>
-                        `<a href="${url}" target="_blank">[${i+1}] ${url}</a>`
+                        `<a href="${url}" target="_blank" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline mb-1">[${i+1}] ${url}</a>`
                     ).join('');
-                    html = `<div class="event complete">
-                        <div class="timestamp">${timestamp}</div>
-                        <strong>📚 All Research Sources (${event.total})</strong>
-                        <div class="sources">
-                            ${allSourcesList}
-                        </div>
-                    </div>`;
+                    html = createEventBox('complete', `
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">${timestamp}</div>
+                        <div class="font-semibold text-gray-900 dark:text-gray-100 mb-3">📚 All Research Sources (${event.total})</div>
+                        <div class="space-y-1">${allSourcesList}</div>
+                    `);
                     break;
 
                 case 'final':
-                    html = `<div class="event final">
-                        <div class="timestamp">${timestamp}</div>
-                        <strong>Final Answer:</strong>
-                        <pre>${event.answer}</pre>
-                    </div>`;
+                    // Remove synthesis progress spinner
+                    const synthesisProgress = document.getElementById('progress-synthesis');
+                    if (synthesisProgress) {
+                        synthesisProgress.remove();
+                    }
+
+                    const renderedFinal = marked.parse(event.answer);
+                    html = createEventBox('final', `
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">${timestamp}</div>
+                        <div class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Final Answer:</div>
+                        <div class="prose prose-blue dark:prose-invert prose-slate max-w-none [&>p]:my-3">${renderedFinal}</div>
+                    `);
                     break;
 
                 case 'complete':
-                    html = `<div class="event complete">
-                        <div class="timestamp">${timestamp}</div>
-                        ✓ Research complete (${event.total_sub_questions} questions)
-                    </div>`;
+                    html = createEventBox('complete', `
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">${timestamp}</div>
+                        <div class="font-medium text-green-700 dark:text-green-400">✓ Research complete (${event.total_sub_questions} questions)</div>
+                    `);
                     break;
 
                 case 'error':
-                    html = `<div class="event error">
-                        <div class="timestamp">${timestamp}</div>
-                        Error: ${event.message}
-                    </div>`;
+                    html = createEventBox('error', `
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">${timestamp}</div>
+                        <div class="font-medium">Error: ${event.message}</div>
+                    `);
                     break;
             }
 
-            output.innerHTML += html;
-            output.scrollTop = output.scrollHeight;
+            if (html) {
+                output.innerHTML += html;
+                output.scrollTop = output.scrollHeight;
+            }
         }
 
         queryInput.addEventListener('keypress', (e) => {
