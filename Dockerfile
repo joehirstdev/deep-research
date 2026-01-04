@@ -21,9 +21,8 @@ WORKDIR /app
 # Copy virtual environment
 COPY --from=builder --chown=appuser:appgroup /app/.venv /app/.venv
 
-# Copy source and static files
+# Copy application source
 COPY --chown=appuser:appgroup ./src ./src
-COPY --chown=appuser:appgroup ./static ./static
 
 USER appuser
 ENV PATH="/app/.venv/bin:$PATH"

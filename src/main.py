@@ -83,7 +83,7 @@ class ResearchRequest(BaseModel):
 
 @app.get("/")
 async def serve_frontend() -> FileResponse:
-    return FileResponse("static/demo.html")
+    return FileResponse("src/ui/demo.html")
 
 
 @app.post("/login")
