@@ -8,9 +8,8 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
@@ -52,9 +51,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 client = OpenAI(
     api_key=settings.llm_api_key,
     base_url=settings.llm_base_url,
@@ -68,6 +64,11 @@ synthesizer = SynthesizerAgent(llm_client=client, model=settings.llm_model)
 
 class ResearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=1000)
+
+
+@app.get("/")
+async def serve_frontend() -> FileResponse:
+    return FileResponse("static/demo.html")
 
 
 @app.post("/login")
