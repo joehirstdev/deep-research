@@ -165,10 +165,10 @@ Structured JSON logging optimised for cloud environments. Each request is traced
 
 ## Deployment
 
-The live application is deployed to **Google Cloud Run** using **Terraform**. The configuration in `terraform/` defines the Cloud Run service, environment variables, secrets management, and networking.
+The live application is deployed to **Google Cloud Run** using **Terraform**. Cloud Run is a serverless platform, so the application scales to zero when not in use (keeping costs minimal), and credentials are stored securely in **Google Secret Manager**. The configuration in `terraform/` defines the Cloud Run service, environment variables, IAM roles, and networking.
 
 ```bash
-# Deploy with Terraform
+# Deploy with Terraform/OpenTofu
 cd terraform
 terraform init
 terraform plan

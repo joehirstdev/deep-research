@@ -4,16 +4,11 @@ variable "project_id" {
 }
 
 variable "region" {
-  default = "us-central1"
+  default = "europe-west1"
   type    = string
 }
 
 variable "image_path" {
   description = "Full path to the Docker image in Artifact Registry"
   type        = string
-}
-
-variable "env_vars" {
-  description = "Environment variables for the container"
-  type        = map(string)
 }
