@@ -43,6 +43,7 @@ env/
 *.tfplan
 .terraformrc
 terraform.rc
+backend.conf
 
 # IDE
 .vscode/

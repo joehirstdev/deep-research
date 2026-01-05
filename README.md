@@ -170,7 +170,7 @@ The live application is deployed to **Google Cloud Run** using **Terraform**. Cl
 ```bash
 # Deploy with Terraform/OpenTofu
 cd terraform
-terraform init
+terraform init -backend-config=backend.conf
 terraform plan
 terraform apply
 ```
